@@ -247,3 +247,7 @@ So, in short, "what" and "is" are like, two little words that pack a big punch w
 2025-09-13 08:47:18,490 - MEMORY LOOKUP for: Hello world
 2025-09-13 08:47:18,490 - {"event": "phase_complete", "phase": "memory", "duration": 0.0015461444854736328, "success": true}
 2025-09-13 08:47:18,490 - {"event": "pipeline_end", "conversation_id": "conv_test_session_1757767638", "input": "Hello world", "start_time": 1757767638.4888842, "phases": [], "total_duration": 0.0015461444854736328}
+2025-09-13 13:08:13,694 - {"event": "pipeline_start", "conversation_id": "conv_cli_session_1757783293", "input": "hello from validator", "start_time": 1757783293.6942365, "phases": []}
+2025-09-13 13:08:13,702 - MEMORY LOOKUP for: hello from validator
+2025-09-13 13:08:13,703 - {"event": "phase_complete", "phase": "memory", "duration": 0.00819087028503418, "success": true}
+2025-09-13 13:08:13,703 - {"event": "pipeline_end", "conversation_id": "conv_cli_session_1757783293", "input": "hello from validator", "start_time": 1757783293.6942365, "phases": [], "total_duration": 0.009352922439575195}

@@ -12,7 +12,7 @@ def require_auth(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 def ip_allowlist(request: Request):
     client_ip = request.client.host
-    allowed_ips = os.getenv("ALLOWED_IPS", "127.0.0.1,::1").split(",")
+    allowed_ips = [ip.strip() for ip in os.getenv("ALLOWED_IPS", "127.0.0.1,::1").split(",")]
     if client_ip not in allowed_ips:
         raise HTTPException(status_code=403, detail="IP not allowed")
     return request

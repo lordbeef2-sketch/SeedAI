@@ -5,7 +5,7 @@ import os
 app = FastAPI(title="SeedAI Gateway", version="1.0.0")
 
 # CORS for dev
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -15,7 +15,7 @@ app.add_middleware(
 )
 
 # Include routers
-from routes import models, chat
+from gateway.routes import models, chat
 app.include_router(models.router)
 app.include_router(chat.router)
 

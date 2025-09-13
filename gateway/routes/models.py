@@ -1,13 +1,16 @@
 from fastapi import APIRouter, Depends
-from ..security.auth import require_auth, ip_allowlist
+from gateway.security.auth import require_auth, ip_allowlist
 import os, json
+from pathlib import Path
 
 router = APIRouter()
 
 def _underlying():
-    # try SeedAI config; fallback to blank
     try:
-        with open(os.path.join("SeedAI","config","llm_config.json"), "r", encoding="utf-8") as f:
+        here = Path(__file__).resolve()
+        repo = here.parents[2]
+        cfg_path = repo / "SeedAI" / "config" / "llm_config.json"
+        with cfg_path.open("r", encoding="utf-8") as f:
             cfg = json.load(f)
         return (cfg.get("model") or "").strip()
     except Exception:

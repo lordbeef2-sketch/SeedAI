@@ -1,0 +1,5 @@
+{
+  "model": "llama2:13b",
+  "endpoint": "http://localhost:11434/api/generate",
+  "ask_permission": true
+}

@@ -251,3 +251,15 @@ So, in short, "what" and "is" are like, two little words that pack a big punch w
 2025-09-13 13:08:13,702 - MEMORY LOOKUP for: hello from validator
 2025-09-13 13:08:13,703 - {"event": "phase_complete", "phase": "memory", "duration": 0.00819087028503418, "success": true}
 2025-09-13 13:08:13,703 - {"event": "pipeline_end", "conversation_id": "conv_cli_session_1757783293", "input": "hello from validator", "start_time": 1757783293.6942365, "phases": [], "total_duration": 0.009352922439575195}
+2025-09-15 17:09:14,310 - {"event": "pipeline_start", "conversation_id": "conv_api_session_1757970554", "input": "Hello", "start_time": 1757970554.3101425, "phases": []}
+2025-09-15 17:09:14,333 - MEMORY LOOKUP for: Hello
+2025-09-15 17:09:14,333 - {"event": "phase_complete", "phase": "memory", "duration": 0.0231630802154541, "success": true}
+2025-09-15 17:09:14,333 - {"event": "pipeline_end", "conversation_id": "conv_api_session_1757970554", "input": "Hello", "start_time": 1757970554.3101425, "phases": [], "total_duration": 0.0231630802154541}
+2025-09-15 17:11:50,303 - {"event": "pipeline_start", "conversation_id": "conv_gui_session_1757970710", "input": "are you awake?", "start_time": 1757970710.3035312, "phases": []}
+2025-09-15 17:11:50,312 - MEMORY LOOKUP for: are you awake?
+2025-09-15 17:11:50,313 - {"event": "phase_complete", "phase": "memory", "duration": 0.009516477584838867, "success": true}
+2025-09-15 17:11:50,313 - {"event": "pipeline_end", "conversation_id": "conv_gui_session_1757970710", "input": "are you awake?", "start_time": 1757970710.3035312, "phases": [], "total_duration": 0.009636163711547852}
+2025-09-15 17:12:00,704 - {"event": "pipeline_start", "conversation_id": "conv_gui_session_1757970710", "input": "thinking for what", "start_time": 1757970720.7041566, "phases": []}
+2025-09-15 17:12:00,704 - MEMORY LOOKUP for: thinking for what
+2025-09-15 17:12:00,704 - {"event": "phase_complete", "phase": "memory", "duration": 0.00040030479431152344, "success": true}
+2025-09-15 17:12:00,704 - {"event": "pipeline_end", "conversation_id": "conv_gui_session_1757970710", "input": "thinking for what", "start_time": 1757970720.7041566, "phases": [], "total_duration": 0.00047588348388671875}

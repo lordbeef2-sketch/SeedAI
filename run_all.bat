@@ -31,4 +31,9 @@ echo ===========================================
 echo.
 echo Model selection should now work in the web interface!
 echo.
+
+echo Generating startup report...
+python -m tools.elysia_digest --since HEAD
+
+echo.
 pause

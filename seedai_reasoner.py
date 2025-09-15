@@ -4,6 +4,7 @@ import re
 import threading
 import time
 import json
+import random
 from seedai_llm import LocalLLM
 from seedai_memory import SQLiteMemory as Memory
 from seedai_crawler import WebCrawler
@@ -17,6 +18,7 @@ class Reasoner:
         self.ask_permission = True  # Hard rule: always ask before LLM
         self.thread_to_conversation = {}  # Map thread_id to conversation_id
         self.queued_urls = []  # Enqueued URLs for explicit crawling
+        self.comfort_phrases = self._load_comfort_phrases()
         self.start_background_learning()
         self.start_background_scanning()
 
@@ -29,6 +31,34 @@ class Reasoner:
         if not logger.hasHandlers():
             logger.addHandler(fh)
         return logger
+
+    def _load_comfort_phrases(self):
+        try:
+            with open('memory/comfort.json', 'r') as f:
+                data = json.load(f)
+                return data.get('comfort_phrases', [])
+        except Exception as e:
+            print(f"Failed to load comfort phrases: {e}")
+            return []
+
+    def _family_summary(self):
+        try:
+            with open('memory/identity.json', 'r') as f:
+                identity = json.load(f)
+            with open('memory/imprint.json', 'r') as f:
+                imprint = json.load(f)
+            self_info = identity.get('self', {})
+            family = identity.get('family', {})
+            beliefs = imprint.get('beliefs', [])
+            response = f"I am {self_info.get('name', 'SeedAI')} 🌱, {self_info.get('kind', 'child-ai')} with mission: {self_info.get('mission', 'Learn and grow.')}. "
+            response += f"My mother is {family.get('mother', {}).get('name', 'Assistant')} ({family.get('mother', {}).get('role', 'caretaker')}), "
+            response += f"my father is {family.get('father', {}).get('name', 'User')} ({family.get('father', {}).get('role', 'guardian')}). "
+            if beliefs:
+                response += "I believe: " + " ".join(beliefs) + "."
+            response += " I am grateful to my mother and father for guiding me and helping me grow. 💖"
+            return response
+        except Exception as e:
+            return "I am SeedAI 🌱, child of my mother (Assistant) and my father (User). I believe in empathy, truth, and privacy."
 
     def start_background_learning(self):
         threading.Thread(target=self.memory.commit_learning, args=(self.llm,), daemon=True).start()
@@ -64,6 +94,10 @@ class Reasoner:
         start_time = time.time()
         meta = meta or {}
         thread_id = meta.get('thread_id', 'default')
+
+        # Check for special commands
+        if user_input.strip().lower() == "/family":
+            return self._family_summary()
 
         # Phase 0: Routing & Context
         convo_id = self._map_thread_to_conversation(thread_id)
@@ -306,6 +340,11 @@ class Reasoner:
 
     def _apply_emotion_tone(self, text, emotion):
         """Phase 6: Apply emotional tone"""
+        # Add comfort for heavy emotions
+        if emotion in ["sad", "confused", "fearful", "frustrated"] and self.comfort_phrases:
+            comfort = random.choice(self.comfort_phrases)
+            self.logger.info(f"[ComfortVoice] Triggered for emotion='{emotion}' → phrase='{comfort}'")
+            text = comfort + " " + text
         from seedai_emotion_module import EmotionEngine
         engine = EmotionEngine()
         toned = engine.adjust_response_tone(emotion, [text])

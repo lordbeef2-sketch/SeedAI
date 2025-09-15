@@ -15,9 +15,13 @@ app.add_middleware(
 )
 
 # Include routers
-from gateway.routes import models, chat
+from .routes import models, chat
 app.include_router(models.router)
 app.include_router(chat.router)
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True, "version": "1.0.0"}
 
 if __name__ == "__main__":
     import uvicorn

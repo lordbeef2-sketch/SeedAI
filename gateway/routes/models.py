@@ -23,3 +23,7 @@ async def list_models():
     if name:
         data.append({"id": f"seedai-{name}", "object": "model"})
     return {"object": "list", "data": data}
+
+@router.get("/models", dependencies=[Depends(require_auth), Depends(ip_allowlist)])
+async def list_models_alias():
+    return await list_models()

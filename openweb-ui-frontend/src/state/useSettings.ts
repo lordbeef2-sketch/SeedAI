@@ -22,9 +22,9 @@ interface SettingsState extends Settings {
 }
 
 const defaultSettings: Settings = {
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8088',
   sseEnabled: true,
-  selectedModel: 'seedai',
+  selectedModel: 'llama3:13b',
   temperature: 0.7,
   memoryFirst: true,
   llmPermission: 'once',

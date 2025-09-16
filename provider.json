@@ -1,1 +1,1 @@
-{"ENABLE_OPENAI_API": true, "OPENAI_API_BASE_URLS": ["http://127.0.0.1:8000/v1"], "OPENAI_API_KEYS": ["changeme"], "OPENAI_API_CONFIGS": {}}
+{"ENABLE_OPENAI_API": true, "OPENAI_API_BASE_URLS": ["http://127.0.0.1:11434/v1"], "OPENAI_API_KEYS": ["ollama"], "OPENAI_API_CONFIGS": {"default_model": "llama3:13b"}}

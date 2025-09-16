@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import threading
 
 app = FastAPI(title="SeedAI Gateway", version="1.0.0")
 
@@ -25,6 +26,15 @@ app.include_router(chat.router)
 @app.get("/healthz")
 def healthz():
     return {"ok": True, "version": "1.0.0"}
+
+# Start progress reporter
+try:
+    import sys
+    sys.path.append('../..')
+    from tools.progress_report import run_reporter
+    threading.Thread(target=run_reporter, daemon=True).start()
+except Exception as e:
+    print(f"Failed to start progress reporter: {e}")
 
 if __name__ == "__main__":
     import uvicorn

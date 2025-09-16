@@ -44,7 +44,7 @@ def get_system_info():
     memory = psutil.virtual_memory()
     disk = psutil.disk_usage('/')
     gpu_info = "N/A"  # Placeholder for GPU info
-    model_info = "llama3:13b"  # Default model
+    model_info = "llama3.2-vision:11b"  # Default model
 
     system_info = {
         "os": platform.system() + " " + platform.release(),

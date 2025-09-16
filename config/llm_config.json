@@ -1,5 +1,5 @@
 {
-  "model": "llama3.2-vision:11b",
-  "endpoint": "http://localhost:11434/api/generate",
+  "model": "llama3:13b",
+  "endpoint": "http://127.0.0.1:11434/v1/chat/completions",
   "ask_permission": true
 }

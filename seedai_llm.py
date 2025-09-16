@@ -14,12 +14,12 @@ class LocalLLM:
         try:
             response = requests.post(
                 self.endpoint,
-                json={"model": self.model, "prompt": prompt, "stream": False},
+                json={"model": self.model, "messages": [{"role": "user", "content": prompt}], "stream": False},
                 timeout=timeout
             )
             if response.status_code == 200:
                 result = response.json()
-                return result.get("response", "").strip()
+                return result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
             else:
                 return f"[Error]: Model query failed with code {response.status_code}"
         except requests.exceptions.Timeout:

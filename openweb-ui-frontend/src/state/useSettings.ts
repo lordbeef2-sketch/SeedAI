@@ -24,7 +24,7 @@ interface SettingsState extends Settings {
 const defaultSettings: Settings = {
   baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
   sseEnabled: true,
-  selectedModel: 'seedai:memory-first',
+  selectedModel: 'seedai',
   temperature: 0.7,
   memoryFirst: true,
   llmPermission: 'once',

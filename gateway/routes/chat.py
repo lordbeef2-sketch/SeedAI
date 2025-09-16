@@ -7,8 +7,14 @@ from gateway.security.auth import require_auth, ip_allowlist
 try:
     from SeedAI.seedai_reasoner import Reasoner
 except Exception:
-    # if package layout differs, adjust this import
-    from seedai_reasoner import Reasoner  # fallback
+    try:
+        # if package layout differs, adjust this import
+        from seedai_reasoner import Reasoner  # fallback
+    except ImportError:
+        # Try relative import
+        import sys
+        sys.path.append('../..')
+        from seedai_reasoner import Reasoner  # fallback
 
 router = APIRouter()
 
@@ -44,7 +50,8 @@ async def chat(req: ChatRequest):
     reasoner = _get_reasoner()
     # If your Reasoner needs thread scoping, plumb req.metadata.get("thread_id")
     # and map it to conversation_id internally here.
-    meta = {"allow_llm": True, "thread_id": req.metadata.get("thread_id", "api_session") if req.metadata else "api_session"}
+    allow = True if req.metadata is None else bool(req.metadata.get("allow_llm", True))
+    meta = {"allow_llm": allow, "thread_id": req.metadata.get("thread_id", "api_session") if req.metadata else "api_session"}
 
     try:
         answer = reasoner.reflect_on_input(user_msg) or ""
@@ -62,3 +69,7 @@ async def chat(req: ChatRequest):
         ],
         "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
     }
+
+@router.post("/chat/completions", dependencies=[Depends(require_auth), Depends(ip_allowlist)])
+async def chat_completions_alias(req: ChatRequest):
+    return await chat(req)

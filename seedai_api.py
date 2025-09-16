@@ -41,6 +41,10 @@ async def list_models():
         ]
     }
 
+@app.get("/models")
+async def list_models_alias():
+    return await list_models()
+
 @app.post("/v1/chat/completions")
 async def chat_completions(request: ChatCompletionRequest):
     try:
@@ -82,5 +86,9 @@ async def chat_completions(request: ChatCompletionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/chat/completions")
+async def chat_completions_alias(request: ChatCompletionRequest):
+    return await chat_completions(request)
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8088)

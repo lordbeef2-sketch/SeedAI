@@ -47,7 +47,7 @@ export const api = {
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
     try {
-      return await apiRequest<ChatResponse>('/api/chat', {
+      return await apiRequest<ChatResponse>('/api/chat/completions', {
         method: 'POST',
         body: JSON.stringify(request),
       })

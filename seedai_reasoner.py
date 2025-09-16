@@ -125,7 +125,7 @@ class Reasoner:
                 return response
 
             # Phase 4: LLM (Guarded)
-            if self.ask_permission and meta.get('allow_llm', False):
+            if self.ask_permission and meta.get('allow_llm', True):
                 llm_ans = self._guarded_llm_query(user_input, ctx)
                 if llm_ans:
                     self._stage_learning(llm_ans)

@@ -15,7 +15,10 @@ app.add_middleware(
 )
 
 # Include routers
-from .routes import models, chat
+try:
+    from .routes import models, chat
+except ImportError:
+    from routes import models, chat
 app.include_router(models.router)
 app.include_router(chat.router)
 

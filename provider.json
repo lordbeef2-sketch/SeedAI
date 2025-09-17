@@ -1,1 +1,1 @@
-{"ENABLE_OPENAI_API": true, "OPENAI_API_BASE_URLS": ["http://127.0.0.1:11434/v1"], "OPENAI_API_KEYS": ["ollama"], "OPENAI_API_CONFIGS": {"default_model": "llama3:13b"}}
+{"ENABLE_OPENAI_API":true,"OPENAI_API_BASE_URLS":["http://127.0.0.1:11434/v1"],"OPENAI_API_KEYS":["ollama"],"OPENAI_API_CONFIGS":{"default_model":"llama3:13b"},"default_provider":"ollama","providers":{"ollama":{"type":"openai_compatible","name":"Ollama (local)","base_url":"http://127.0.0.1:11434/v1","api_key":"ollama","notes":"Local Ollama server. Model names: gemma3:12b, llama3:13b"}}}

@@ -56,6 +56,13 @@ except Exception as e:
 # Include the generic chat router last (will not be matched for /api/chat if Aurelia is present)
 app.include_router(chat.router)
 
+# Include memory router for programmatic memory updates
+try:
+    from gateway.memory_router import router as memory_router
+    app.include_router(memory_router)
+except Exception:
+    pass
+
 # optional: only if you created the reporter and router files
 try:
     from gateway.openwebui_models_probe import router as probe_router

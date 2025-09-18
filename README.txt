@@ -23,3 +23,19 @@ Apply:
 Env overrides (optional):
 - OLLAMA_BASE_URL=http://127.0.0.1:11434
 - AURELIA_DEFAULT_MODEL=llama3.2-vision:11b
+
+Memory bootstrap for Aurelia
+---------------------------
+Files added:
+- `seedai/memory/core.json` — Aurelia core memory (identity, relationships, capabilities, principles).
+- `gateway/memory_bootstrap.py` — loader that creates system messages from persona, core.json, and ElysiaDigest/latest/digest.md.
+- `gateway/aurelia_persona_router.py` — updated to call the bootstrap loader before forwarding to Ollama.
+- `scripts/test_memory_bootstrap.py` — simple test script to validate /api/models and /api/chat behavior.
+
+Run tests (after starting Ollama + backend):
+```powershell
+.\run_all.bat
+python -m scripts.test_memory_bootstrap
+```
+
+Expected: test prints `TEST PASSED` and chat reply mentions "Aurelia" and "Lord Shinza".

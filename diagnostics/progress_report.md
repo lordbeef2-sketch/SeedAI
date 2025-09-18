@@ -1,26 +1,24 @@
-# Aurelia Progress Report
-Generated: 2025-09-18T21:37:15.470181 UTC
+# SeedAI Progress Report
+Generated: 2025-09-18T18:02:06.910183
 
-## System
-- Platform: Windows-10-10.0.26100-SP0
-- Python: 3.11.9 (C:\Users\Main1\AppData\Local\Programs\Python\Python311\python.exe)
-- CPU count: 24
-- RAM: (install psutil for detailed RAM)
-- GPU VRAM: unknown
+## System Information
+- OS: Windows 10
+- CPU Usage: 18.4%
+- RAM Usage: 31 GB / 95 GB
+- Disk Usage: 763 GB / 930 GB
+- GPU VRAM: N/A
+- Model Loaded: llama3.2-vision:11b
 
-## Ollama Discovery
-- Base: http://127.0.0.1:11434
-- Path matched: /v1/models (http 200)
-- Models: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
-- Selected model: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+## Backend Status
+❌ Backend not reachable: HTTPConnectionPool(host='localhost', port=8080): Max retries exceeded with url: /api/models (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022F689825D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
 
-## Backend Health
-- import gateway.app: OK (app loaded)
-- /healthz probe: OK (200 {"ok":true,"version":"1.0.0"})
-- uvicorn probe: OK
+## Recent Activity
+- Last Commit: 7e225e1f
+- Changes: 5 files modified
+- Test Status: pytest: FAIL
 
-## Chat Probe
-- Using model: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]} -> FAIL
-```
-HTTP Error 400: Bad Request
-```
+## Configuration
+- Provider: Ollama
+- Base URL: http://127.0.0.1:11434/v1
+- API Key: ollama
+- Default Model: llama3:13b

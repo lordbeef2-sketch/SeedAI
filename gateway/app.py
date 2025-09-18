@@ -36,13 +36,25 @@ try:
     from .routes import models, chat
 except ImportError:
     from routes import models, chat
+# Include models first
 app.include_router(models.router)
-app.include_router(chat.router)
+# Include settings next
 try:
     from .routes import settings as settings_router
 except Exception:
     from routes import settings as settings_router
 app.include_router(settings_router.router)
+
+# Load Aurelia persona router BEFORE the generic chat router so it can own /api/chat
+try:
+    from gateway.aurelia_persona_router import router as aurelia_router
+    app.include_router(aurelia_router)
+    print("[Aurelia] persona router loaded")
+except Exception as e:
+    print("[Aurelia] persona router not loaded:", e)
+
+# Include the generic chat router last (will not be matched for /api/chat if Aurelia is present)
+app.include_router(chat.router)
 
 # optional: only if you created the reporter and router files
 try:

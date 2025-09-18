@@ -56,9 +56,16 @@ export const ChatComposer = () => {
           temperature,
           metadata: { memory_first: memoryFirst }
         })
-
-        const assistantMessage = response.choices[0].message
-        addMessage(assistantMessage)
+        console.debug('api.chat response:', response)
+        const assistantMessage = response.choices && response.choices[0] && response.choices[0].message
+        console.debug('assistantMessage:', assistantMessage)
+        console.debug('activeConversationId', useChat.getState().activeConversationId)
+        console.debug('current conversation messages', useChat.getState().conversations.find(c => c.id === useChat.getState().activeConversationId))
+        if (assistantMessage) {
+          addMessage(assistantMessage)
+        } else {
+          console.warn('No assistant message found in response', response)
+        }
         setLoading(false)
 
         // Check for permission request
@@ -69,6 +76,11 @@ export const ChatComposer = () => {
       }
     } catch (error) {
       console.error('Chat error:', error)
+      try {
+        // show lightweight browser alert to help debug UX
+        // eslint-disable-next-line no-alert
+        alert('Chat error: ' + ((error as any && (error as any).message) ? (error as any).message : String(error)))
+      } catch (e) {}
       setLoading(false)
     }
   }

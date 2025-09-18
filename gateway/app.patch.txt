@@ -1,0 +1,30 @@
+# PATCH INSTRUCTIONS for gateway/app.py
+
+# 1) Add near imports:
+from fastapi.middleware.cors import CORSMiddleware
+try:
+    from gateway.openwebui_models_probe import router as probe_router
+except Exception:
+    probe_router = None
+
+# 2) After app = FastAPI(...):
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+if probe_router is not None:
+    app.include_router(probe_router)
+
+# 3) Start reporter in background (non-blocking):
+import threading
+def _run_reporter():
+    try:
+        from tools.progress_report import main as run_reporter
+        run_reporter()
+    except Exception as e:
+        print("Failed to start progress reporter:", e)
+
+threading.Thread(target=_run_reporter, daemon=True).start()

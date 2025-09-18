@@ -104,8 +104,16 @@ export async function chatStream(
   onError?: (error: Error) => void,
   onComplete?: () => void
 ): Promise<void> {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
-  const url = `${baseUrl}/api/chat`
+  // Prefer runtime-configured baseUrl from the settings store when available
+  let baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080'
+  try {
+    // Lazy require to avoid bundling issues
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const settings = require('@/state/useSettings').useSettings
+    const runtime = settings.getState().baseUrl
+    if (runtime) baseUrl = runtime
+  } catch (e) {}
+  const url = `${baseUrl.replace(/\/$/, '')}/api/chat`
 
   const sseClient = new SSEClient(url, {
     method: 'POST',

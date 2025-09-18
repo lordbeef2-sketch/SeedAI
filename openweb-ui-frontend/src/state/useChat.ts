@@ -115,18 +115,31 @@ export const useChat = create<ChatState>()(
     }),
     {
       name: STORAGE_KEYS.CONVERSATIONS,
-      storage: {
-        getItem: (name) => {
+      storage: ({
+  getItem: (name: string) => {
           const value = storage.get(name, null)
-          return value ? JSON.stringify(value) : null
+          try {
+            return value ? JSON.stringify(value) : null
+          } catch (err) {
+            console.warn('useChat.getItem: failed to stringify stored value', err)
+            return null
+          }
         },
-        setItem: (name, value) => {
-          storage.set(name, JSON.parse(value))
+  setItem: (name: string, value: string) => {
+          try {
+            if (typeof value === 'string') {
+              storage.set(name, JSON.parse(value))
+            } else {
+              storage.set(name, value as any)
+            }
+          } catch (err) {
+            console.warn('useChat.setItem: invalid JSON value, ignoring.', err)
+          }
         },
-        removeItem: (name) => {
+  removeItem: (name: string) => {
           storage.remove(name)
         },
-      },
+      } as any),
       partialize: (state) => ({
         conversations: state.conversations,
         activeConversationId: state.activeConversationId,

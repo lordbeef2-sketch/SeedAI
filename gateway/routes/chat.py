@@ -28,7 +28,8 @@ def _get_reasoner():
 
 class Message(BaseModel):
     role: str
-    content: str
+    # content can be a string or structured (for vision: list of {type, text/image_url})
+    content: Any
 
 class ChatRequest(BaseModel):
     model: Optional[str] = "seedai"
@@ -37,39 +38,66 @@ class ChatRequest(BaseModel):
     temperature: Optional[float] = 0.7
     max_tokens: Optional[int] = 1024
 
-@router.post("/v1/chat/completions", dependencies=[Depends(require_auth), Depends(ip_allowlist)])
-async def chat(req: ChatRequest):
-    # Accept any "seedai*" model id; treat "seedai" as the program
-    if not (req.model or "").startswith("seedai"):
-        raise HTTPException(status_code=400, detail="Unsupported model; use 'seedai'")
+@router.post("/api/chat", dependencies=[Depends(require_auth), Depends(ip_allowlist)])
+async def api_chat(req: ChatRequest):
+    # Validate messages present
+    if not req.messages:
+        raise HTTPException(status_code=400, detail="No messages provided")
 
-    user_msg = next((m.content for m in reversed(req.messages) if m.role == "user"), "")
-    if not user_msg:
-        raise HTTPException(status_code=400, detail="No user message provided")
+    # Force stream to False for compatibility
+    stream_flag = False
 
-    reasoner = _get_reasoner()
-    # If your Reasoner needs thread scoping, plumb req.metadata.get("thread_id")
-    # and map it to conversation_id internally here.
-    allow = True if req.metadata is None else bool(req.metadata.get("allow_llm", True))
-    meta = {"allow_llm": allow, "thread_id": req.metadata.get("thread_id", "api_session") if req.metadata else "api_session"}
-
-    try:
-        answer = reasoner.reflect_on_input(user_msg) or ""
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Reasoner error: {e}")
-
-    # OpenAI-compatible response
-    return {
-        "id": "seedai-chat",
-        "object": "chat.completion",
-        "created": 0,
-        "model": req.model or "seedai",
-        "choices": [
-            {"index": 0, "message": {"role": "assistant", "content": answer}, "finish_reason": "stop"}
-        ],
-        "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+    # Prepare payload for Ollama / OpenAI-compatible endpoint
+    payload = {
+        "model": req.model or "",
+        "messages": [],
+        "stream": stream_flag,
+        "max_tokens": req.max_tokens or 256,
+        "temperature": req.temperature or 0.7,
     }
+
+    # Normalize messages: allow string or structured content
+    for m in req.messages:
+        content = m.content
+        # If content is structured (list), pass through as-is
+        if isinstance(content, list):
+            payload['messages'].append({"role": m.role, "content": content})
+        else:
+            payload['messages'].append({"role": m.role, "content": str(content)})
+
+    # Forward to Ollama
+    try:
+        from gateway import providers
+        base = providers.get_base_url()
+        api_key = providers.get_api_key() or ""
+        url = base.rstrip('/') + "/v1/chat/completions"
+        import requests
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        r = requests.post(url, json=payload, headers=headers, timeout=10)
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=504, detail="Timeout when contacting model provider")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Provider error: {e}")
+
+    # Return provider's JSON or a normalized error
+    try:
+        if r.status_code >= 200 and r.status_code < 300:
+            return r.json()
+        else:
+            # Attempt to return provider message
+            try:
+                err = r.json()
+            except Exception:
+                err = {"status_code": r.status_code, "text": r.text[:1000]}
+            raise HTTPException(status_code=400, detail={"error": "provider_error", "provider": err})
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
 
 @router.post("/chat/completions", dependencies=[Depends(require_auth), Depends(ip_allowlist)])
 async def chat_completions_alias(req: ChatRequest):
-    return await chat(req)
+    return await api_chat(req)

@@ -1,8 +1,8 @@
+# gateway/openwebui_models_probe.py
 from fastapi import APIRouter
 import urllib.request, json
 
 router = APIRouter()
-
 OLLAMA_BASE = "http://127.0.0.1:11434"
 
 @router.get("/api/models")
@@ -17,13 +17,12 @@ def models_probe():
                 raw = resp.read().decode("utf-8", errors="ignore")
                 try:
                     data = json.loads(raw)
-                    # normalize to a list of names
                     if isinstance(data, dict) and "models" in data:
-                        names = [m.get("name") or m for m in data["models"]]
+                        names = [m.get("name") if isinstance(m, dict) else str(m) for m in data["models"]]
                     elif isinstance(data, list):
                         names = [ (item.get("name") if isinstance(item, dict) else str(item)) for item in data ]
                     else:
-                        names = [w for w in raw.split() if "llama" in w or "gemma" in w]
+                        names = [w for w in raw.split() if any(t in w.lower() for t in ("llama","gemma","mistral","qwen"))]
                     return {"ok": True, "endpoint": p, "models": names}
                 except Exception:
                     return {"ok": True, "endpoint": p, "raw": raw[:2000]}

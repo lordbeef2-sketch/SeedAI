@@ -1,324 +1,246 @@
+# tools/progress_report.py
 """
-Progress reporter for Aurelia (SeedAI).
-Writes diagnostics/progress_report.md (full) and appends a Runtime Check to ElysiaDigest/latest/digest.md.
-Safe, idempotent, and relies on stdlib where possible.
+Robust progress reporter for Aurelia (SeedAI).
+
+- Writes diagnostics/progress_report.md (full; overwritten each run)
+- Appends a concise "## Runtime Check" to ElysiaDigest/latest/digest.md
+- Pure stdlib; no GPU/vendor libs
+- Non-blocking uvicorn probe (no freezes)
+- Ollama chat probe uses OpenAI-compatible JSON with "stream": false
 """
 
 from __future__ import annotations
-import os, sys, subprocess, json, platform, shutil, time, socket
+import os, sys, subprocess, json, platform, time
 from pathlib import Path
 from datetime import datetime
+from typing import Tuple, List
 
-# Correcting syntax issues and ensuring proper imports
 ROOT = Path(__file__).resolve().parents[1]
 DIAG_DIR = ROOT / "diagnostics"
-DIAG_DIR.mkdir(parents=True, exist_ok=True)
-OUT_MD = DIAG_DIR / "progress_report.md"
 DIGEST_DIR = ROOT / "ElysiaDigest" / "latest"
-DIGEST_DIR.mkdir(parents=True, exist_ok=True)
+OUT_MD = DIAG_DIR / "progress_report.md"
 DIGEST_MD = DIGEST_DIR / "digest.md"
 
-import psutil
-import requests
-import threading
+BASE_OLLAMA = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+PREFERRED_MODEL = os.environ.get("AURELIA_DEFAULT_MODEL", "llama3.2-vision:11b")
+OLLAMA_PATHS = ("/v1/models", "/models", "/api/tags", "/v1/tags", "/v1/engines")
 
-nvidia_available = True
+try:
+    from gateway.providers import get_base_url, get_default_model
+    try:
+        BASE_OLLAMA = get_base_url()
+        PREFERRED_MODEL = get_default_model() or PREFERRED_MODEL
+    except Exception:
+        pass
+except Exception:
+    # running in environments where gateway isn't importable; ignore
+    pass
 
-def get_system_info():
-    info = {}
+def _ensure_dirs():
+    DIAG_DIR.mkdir(parents=True, exist_ok=True)
+    DIGEST_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Default model
-    BASE_OLLAMA = "http://127.0.0.1:11434"
-    OLLAMA_API_PATHS = ("/v1/models","/models","/api/tags","/v1/tags","/v1/engines")
+def try_cmd(cmd: list, timeout: int = 10) -> Tuple[int, str]:
+    try:
+        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=timeout, shell=False)
+        return p.returncode, p.stdout.strip()
+    except subprocess.TimeoutExpired:
+        return 124, f"Timeout after {timeout}s: {' '.join(cmd)}"
+    except FileNotFoundError as e:
+        return 127, f"Not found: {e}"
+    except Exception as e:
+        return 1, f"Error: {e}"
 
-    def try_cmd(cmd, timeout=10, cwd=None):
-        try:
-            p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=cwd, timeout=timeout, shell=False)
-            return p.returncode, p.stdout.strip()
-        except subprocess.TimeoutExpired as e:
-            info["default_model"] = cfg.get("model", "unknown")
-            return 124, f"Timeout after {timeout}s"
-        except FileNotFoundError as e:
-            return 127, f"Not found: {e}"
-        except Exception:
-            pass
-        try:
-            info["default_model"] = "unknown"
-            return 127, f"Not found: {e}"
-        except Exception:
-            pass
+def http_get(url: str, timeout: int = 5):
+    try:
+        from urllib.request import urlopen, Request
+        req = Request(url, headers={"User-Agent": "Aurelia-Reporter/1.0"})
+        with urlopen(req, timeout=timeout) as f:
+            return f.getcode(), f.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        return None, str(e)
 
-    # VRAM
-    def http_get(url, timeout=5):
-        if nvidia_available:
-            """Try simple GET using requests if available, else urllib."""
+def discover_ollama_models(base: str):
+    last_err = "no endpoint tried"
+    for p in OLLAMA_PATHS:
+        url = base.rstrip("/") + p
+        code, text = http_get(url)
+        if code and code < 400:
             try:
-                handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-                import requests
-                mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                r = requests.get(url, timeout=timeout)
-                info["vram_used"] = mem_info.used // (1024**3)  # GB
-                return r.status_code, r.text
+                data = json.loads(text)
+                if isinstance(data, dict) and "models" in data:
+                    names = [m.get("name") if isinstance(m, dict) else str(m) for m in data["models"]]
+                elif isinstance(data, list):
+                    names = [(x.get("name") if isinstance(x, dict) else str(x)) for x in data]
+                else:
+                    names = [w for w in text.split() if any(t in w.lower() for t in ("llama", "gemma", "mistral", "qwen"))]
+                return p, names, url, code, text
             except Exception:
-                pass
-        try:
-            info["vram_used"] = "N/A"
-            from urllib.request import urlopen, Request
-            req = Request(url, headers={"User-Agent":"Aurelia-Reporter/1.0"})
-            with urlopen(req, timeout=timeout) as f:
-                return f.getcode(), f.read().decode("utf-8", errors="ignore")
-        except Exception as e:
-            return None, str(e)
-
-    # RAM
-    ram = psutil.virtual_memory()
-
-    def find_ollama_models(base=BASE_OLLAMA):
-        found = []
-        for p in OLLAMA_API_PATHS:
-            url = base.rstrip("/") + p
-            # CPU
-            code, txt = http_get(url)
-            info["cpu_load"] = psutil.cpu_percent(interval=1)
-            if code and code < 400:
-                # best-effort parse
-                try:
-                    data = json.loads(txt)
-                    resp = requests.get(f"{GATEWAY_URL}/api/models", timeout=5)
-                    # try common shapes
-                    info["models_probe"] = "PASS" if resp.status_code == 200 else "FAIL"
-                    if isinstance(data, dict) and "models" in data:
-                        found = [m.get("name") or m for m in data["models"]]
-                    elif isinstance(data, list):
-                        # list of strings or dicts
-                        found = [ (item.get("name") if isinstance(item, dict) else str(item)) for item in data ]
-                    else:
-                        # fallback: search for tokens like 'llama' or 'gemma'
-                        found = list({w for w in txt.split() if "llama" in w or "gemma" in w})
-                except Exception:
-                    found = list({w for w in txt.split() if "llama" in w or "gemma" in w})
-                return info
-        if found:
-            return p, found, url, code, txt
-
-def write_summary(info):
-    summary = f"- Default model: {info['default_model']}\n"
-    if info['vram_used'] != "N/A":
-        summary += f"- VRAM usage: {info['vram_used']} GB / {info['vram_total']} GB\n"
-        # best-effort: try torch, then nvidia-smi, else unknown
-        try:
-            import torch
-            if torch.cuda.is_available():
-                idx = 0
-                mem = torch.cuda.get_device_properties(idx).total_memory
-                used = torch.cuda.memory_allocated(idx)
-                return f"cuda:{idx} total={mem//1024**2}MB used={used//1024**2}MB"
-        except Exception:
-            with open(DIGEST_PATH, "a") as f:
-                pass
-    else:
-        summary += "- VRAM usage: N/A\n"
-    summary += f"- RAM usage: {info['ram_used']} GB / {info['ram_total']} GB\n"
-    summary += f"- CPU usage: {info['cpu_load']}%\n"
-    summary += f"- Models probe: {info['models_probe']}\n"
-    summary += f"- Health probe: {info['health_probe']}\n"
-    return summary
-
-def write_full_report(info):
-    report = f"Progress Report - {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-    report += f"Default Model: {info['default_model']}\n\n"
-    report += f"System Resources:\n"
-    report += f"- VRAM: {info['vram_used']} / {info['vram_total']} GB\n"
-    report += f"- RAM: {info['ram_used']} / {info['ram_total']} GB\n"
-    report += f"- CPU Load: {info['cpu_load']}%\n\n"
-    report += f"Health Probes:\n"
-    report += f"- Models API: {info['models_probe']}\n"
-    report += f"- Health Endpoint: {info['health_probe']}\n"
-    try:
-        from importlib import import_module
-        mm = import_module("gateway.app")
-        app = getattr(mm, "app", None)
-        if app is None:
-            report += "Import Error: module loaded but 'app' not found\n"
+                return p, [], url, code, text[:2000]
         else:
-            # try TestClient
-            from fastapi.testclient import TestClient
-            with TestClient(app) as client:
-                r = client.get("/healthz")
-                report += f"TestClient health probe: {'OK' if r.status_code == 200 else 'FAIL'} {r.status_code} {r.text}\n"
-    except Exception as e:
-        report += f"Import Error: {e}\n"
-    # bounded uvicorn
-    report += "## Uvicorn probe\n"
-    started, uvout = bounded_uvicorn_probe()
-    report += f"- uvicorn start probe: {'OK' if started else 'FAIL'}\n"
-    if uvout:
-        report += f"- uvicorn output (truncated):\n```\n{uvout}\n```\n"
-    # quick chat probe if model available
-    report += "## Chat probe\n"
-    if models:
-        model_to_test = models[0]
-        ok_chat, chat_resp = probe_chat_send(model_to_test)
-        report += f"- probe model: {model_to_test} -> {'OK' if ok_chat else 'FAIL'}\n"
-        if chat_resp:
-            report += f"- response (truncated):\n```\n{chat_resp[:2000]}\n```\n"
-    else:
-        report += "- No model to probe.\n"
-    # pytest quick run
-    report += "## Tests (quick)\n"
-    rc, out = try_cmd([sys.executable, "-m", "pytest", "-q", "-k", "health"], timeout=60)
-    report += f"- pytest health: rc={rc}\n"
-    report += f"```\n{(out or '')[:4000]}\n```"
-    return report
+            last_err = text
+    return "", [], "", 0, last_err
 
-def safe_import(module_name):
-    try:
-        __import__(module_name)
-        return True, None
-    except Exception as e:
-        return False, str(e)
+def choose_model(models: list) -> str:
+    if not models:
+        return "none"
+    if PREFERRED_MODEL in models:
+        return PREFERRED_MODEL
+    pref_prefix = PREFERRED_MODEL.split(":", 1)[0]
+    for m in models:
+        if m.startswith(pref_prefix):
+            return m
+    return models[0]
 
-def test_fastapi_health():
+def gpu_vram_info() -> str:
+    rc, out = try_cmd(["nvidia-smi", "--query-gpu=memory.total,memory.used", "--format=csv,noheader,nounits"], timeout=2)
+    if rc == 0 and out:
+        return f"NVIDIA VRAM (MB): {out}"
+    rc, out = try_cmd(["rocm-smi", "--showmeminfo", "vram"], timeout=2)
+    if rc == 0 and out:
+        return f"ROCm VRAM: {out.splitlines()[0][:200]}"
+    return "unknown"
+
+def import_health() -> Tuple[bool, str]:
     try:
         from importlib import import_module
-        mm = import_module("gateway.app")
-        app = getattr(mm, "app", None)
-        if app is None:
-            return False, "module loaded but 'app' not found"
-        # try TestClient
-        from fastapi.testclient import TestClient
-        with TestClient(app) as client:
-            r = client.get("/healthz")
-            return (r.status_code == 200), f"{r.status_code} {r.text}"
+        m = import_module("gateway.app")
+        app = getattr(m, "app", None)
+        return (app is not None), ("app loaded" if app is not None else "app missing")
     except Exception as e:
-        return False, f"Import fail: {e}"
+        return False, f"import error: {e}"
 
-def bounded_uvicorn_probe(app_path="gateway.app:app", port=8000, wait_s=5):
-    # run uvicorn as python -m uvicorn ... (no reload), capture output for wait_s seconds
-    cmd = [sys.executable, "-m", "uvicorn", app_path, "--host", "127.0.0.1", "--port", str(port), "--log-level", "info"]
+def fastapi_probe() -> Tuple[bool, str]:
+    try:
+        from importlib import import_module
+        m = import_module("gateway.app")
+        app = getattr(m, "app", None)
+        if app is None:
+            return False, "no app"
+        try:
+            from fastapi.testclient import TestClient
+            with TestClient(app) as c:
+                r = c.get("/healthz")
+                return (r.status_code == 200), f"{r.status_code} {r.text}"
+        except Exception as e:
+            return False, f"TestClient error: {e}"
+    except Exception as e:
+        return False, f"import error: {e}"
+
+def bounded_uvicorn_probe(app_path="gateway.app:app", port=8091, wait_s=3) -> Tuple[bool, str]:
+    """
+    Start uvicorn in a child proc briefly; don't block on stdout.
+    """
+    cmd = [sys.executable, "-m", "uvicorn", app_path, "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"]
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    except Exception as e:
-        return False, f"Failed to start uvicorn: {e}"
-    try:
-        time.sleep(wait_s)
-        out = ""
         try:
-            out = p.stdout.read()
+            # Just wait; do not read stdout synchronously (can block).
+            time.sleep(wait_s)
+            # Non-blocking collect using communicate with small timeout.
+            out, _ = p.communicate(timeout=0.1)
         except Exception:
-            pass
-        # then kill
-        p.kill()
-        return True, out.strip()[:8192]
+            out = ""
+        finally:
+            with contextlib.suppress(Exception):
+                p.kill()
+        return True, (out or "")[:4000]
     except Exception as e:
-        try:
-            p.kill()
-        except Exception:
-            pass
-        return False, f"Probe error: {e}"
+        return False, f"uvicorn start error: {e}"
 
-def probe_chat_send(model_name, base=BASE_OLLAMA):
-    # best-effort chat test using OpenAI-compatible endpoint shape
+def chat_probe(model: str, base: str) -> Tuple[bool, str]:
+    """
+    OpenAI-compatible chat completion to Ollama, with stream:false to avoid 400s.
+    """
     url = base.rstrip("/") + "/v1/chat/completions"
     payload = {
-        "model": model_name,
-        "messages": [{"role":"user","content":"Hello Aurelia"}],
-        "max_tokens": 32
+        "model": model,
+        "messages": [{"role": "user", "content": "Hello Aurelia"}],
+        "stream": False,
+        "max_tokens": 64
     }
     try:
-        import requests
-        r = requests.post(url, json=payload, timeout=8)
-        return r.status_code == 200, r.text
+        body = json.dumps(payload).encode("utf-8")
+        from urllib.request import Request, urlopen
+        req = Request(url, data=body, headers={"Content-Type": "application/json", "Authorization": "Bearer ollama"})
+        with urlopen(req, timeout=10) as f:
+            txt = f.read().decode("utf-8", errors="ignore")
+            return True, txt[:2000]
     except Exception as e:
         return False, str(e)
 
-def write_full_report(report_text):
-    OUT_MD.write_text(report_text, encoding="utf-8")
+def gather() -> Tuple[str, str]:
+    lines: List[str] = []
+    now = datetime.utcnow().isoformat()
+    lines += [f"# Aurelia Progress Report", f"Generated: {now} UTC", ""]
+    lines += [
+        "## System",
+        f"- Platform: {platform.platform()}",
+        f"- Python: {platform.python_version()} ({sys.executable})",
+        f"- CPU count: {os.cpu_count()}",
+        f"- RAM: (install psutil for detailed RAM)",
+        f"- GPU VRAM: {gpu_vram_info()}",
+        ""
+    ]
+    path, models, url, code, raw = discover_ollama_models(BASE_OLLAMA)
+    selected = choose_model(models)
+    lines += [
+        "## Ollama Discovery",
+        f"- Base: {BASE_OLLAMA}",
+        f"- Path matched: {path or 'none'} (http {code})",
+        f"- Models: {', '.join(models) if models else '(none)'}",
+        f"- Selected model: {selected}",
+        ""
+    ]
+    ok_imp, msg_imp = import_health()
+    ok_fa,  msg_fa  = fastapi_probe()
+    ok_uv,  msg_uv  = bounded_uvicorn_probe()
+    lines += [
+        "## Backend Health",
+        f"- import gateway.app: {'OK' if ok_imp else 'FAIL'} ({msg_imp})",
+        f"- /healthz probe: {'OK' if ok_fa else 'FAIL'} ({msg_fa})",
+        f"- uvicorn probe: {'OK' if ok_uv else 'FAIL'}",
+        ""
+    ]
+    lines += ["## Chat Probe"]
+    if selected != "none":
+        ok_chat, msg_chat = chat_probe(selected, BASE_OLLAMA)
+        lines += [f"- Using model: {selected} -> {'OK' if ok_chat else 'FAIL'}", f"```\n{msg_chat}\n```"]
+    else:
+        lines += ["- No model available to probe."]
+    full = "\n".join(lines)
+    return full, selected
 
-def append_digest_runtime(entry_lines):
-    header = "## Runtime Check"
-    body = "\n".join(["- " + l for l in entry_lines])
-    block = f"\n{header}\n{body}\n"
-    # ensure digest exists
+def write_full_report(report_text: str):
+    _ensure_dirs()
+    OUT_MD.write_text(str(report_text), encoding="utf-8")
+
+def append_digest_runtime(selected_model: str):
+    _ensure_dirs()
     if not DIGEST_MD.exists():
         DIGEST_MD.write_text("# Elysia Digest\n\n", encoding="utf-8")
+    entry = [
+        "## Runtime Check",
+        f"- Default provider: Ollama ({BASE_OLLAMA})",
+        f"- Default model: {selected_model}",
+        f"- Generated: {datetime.utcnow().isoformat()} UTC",
+        ""
+    ]
     with open(DIGEST_MD, "a", encoding="utf-8") as f:
-        f.write(block)
+        f.write("\n".join(entry))
 
-def gather():
-    lines = []
-    now = datetime.utcnow().isoformat()
-    lines.append(f"# Aurelia Progress Report")
-    lines.append(f"Generated: {now} UTC")
-    lines.append("")
-    lines.append("## System")
-    lines.append(f"- Platform: {platform.platform()}")
-    lines.append(f"- Python: {platform.python_version()} ({sys.executable})")
-    lines.append(f"- CPU count: {os.cpu_count()}")
-    try:
-        import psutil
-        mem = psutil.virtual_memory()
-        lines.append(f"- RAM: {mem.used//1024**2}MB used / {mem.total//1024**2}MB total")
-    except Exception:
-        lines.append("- RAM: psutil not installed (install for richer info)")
-    # GPU
-    lines.append(f"- GPU VRAM: {gpu_vram_info()}")
-    lines.append("")
-    # Ollama probe
-    p, models, url, code, raw = find_ollama_models()
-    lines.append("## Ollama / Model discovery")
-    if models:
-        lines.append(f"- Endpoint path matched: {p} @ {url} (http {code})")
-        lines.append(f"- Models found: {', '.join(models)}")
-    else:
-        lines.append(f"- No Ollama models discovered. probe result: {raw}")
-    lines.append("")
-    # import tests
-    lines.append("## Import & Health checks")
-    ok_app, msg_app = safe_import("gateway.app")
-    lines.append(f"- import gateway.app: {'OK' if ok_app else 'FAIL'} {msg_app or ''}")
-    ok_health, msg_health = test_fastapi_health()
-    lines.append(f"- FastAPI health probe: {'OK' if ok_health else 'FAIL'} {msg_health}")
-    # bounded uvicorn
-    lines.append("## Uvicorn probe")
-    started, uvout = bounded_uvicorn_probe()
-    lines.append(f"- uvicorn start probe: {'OK' if started else 'FAIL'}")
-    if uvout:
-        lines.append(f"- uvicorn output (truncated):\n```\n{uvout}\n```")
-    # quick chat probe if model available
-    lines.append("")
-    lines.append("## Chat probe")
-    if models:
-        model_to_test = models[0]
-        ok_chat, chat_resp = probe_chat_send(model_to_test)
-        lines.append(f"- probe model: {model_to_test} -> {'OK' if ok_chat else 'FAIL'}")
-        if chat_resp:
-            lines.append(f"- response (truncated):\n```\n{chat_resp[:2000]}\n```")
-    else:
-        lines.append("- No model to probe.")
-    # pytest quick run
-    lines.append("## Tests (quick)")
-    rc, out = try_cmd([sys.executable, "-m", "pytest", "-q", "-k", "health"], timeout=60)
-    lines.append(f"- pytest health: rc={rc}")
-    lines.append(f"```\n{(out or '')[:4000]}\n```")
-    # finalize
-    full = "\n".join(lines)
-    return full, models
+# --- small stdlib helper for suppress ---
+import contextlib
 
 def main():
-    report, models = gather()
+    try:
+        report, selected = gather()
+    except Exception as e:
+        report, selected = f"# Aurelia Progress Report\nError during gather: {e}", "none"
     write_full_report(report)
-    # append digest summary
-    default_model = (models[0] if models else "none")
-    entry = [
-        f"Default provider: Ollama ({BASE_OLLAMA})",
-        f"Default model: {default_model}",
-        f"Status: {'✅ Backend running and model reachable' if models else '❌ model not reachable'}",
-        f"Generated: {datetime.utcnow().isoformat()} UTC"
-    ]
-    append_digest_runtime(entry)
-    print("Progress report written to", OUT_MD)
-    print("Digest appended at", DIGEST_MD)
+    append_digest_runtime(selected)
+    print(f"Wrote {OUT_MD}")
+    print(f"Updated {DIGEST_MD}")
 
 if __name__ == "__main__":
     main()

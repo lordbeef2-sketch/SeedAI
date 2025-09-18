@@ -1,7 +1,16 @@
 from seedai_reasoner import Reasoner
+from seedai_memory import Memory
+from seedai_emotion_module import EmotionModule
+from seedai_listener import Listener
+from seedai_speaker import Speaker
 
 print("SeedAI Child has started. It is listening.")
+
 reasoner = Reasoner()
+memory = Memory()
+emotion_module = EmotionModule()
+listener = Listener()
+speaker = Speaker()
 
 while True:
     try:

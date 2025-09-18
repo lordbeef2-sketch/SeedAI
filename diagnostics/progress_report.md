@@ -1,24 +1,26 @@
-# SeedAI Progress Report
-Generated: 2025-09-16T21:24:22.792559
+# Aurelia Progress Report
+Generated: 2025-09-18T08:17:34.283787 UTC
 
-## System Information
-- OS: Windows 10
-- CPU Usage: 23.3%
-- RAM Usage: 41 GB / 95 GB
-- Disk Usage: 756 GB / 930 GB
-- GPU VRAM: N/A
-- Model Loaded: llama3.2-vision:11b
+## System
+- Platform: Windows-10-10.0.26100-SP0
+- Python: 3.11.9 (C:\Users\Main1\AppData\Local\Programs\Python\Python311\python.exe)
+- CPU count: 24
+- RAM: (install psutil for detailed RAM)
+- GPU VRAM: unknown
 
-## Backend Status
-❌ Backend not reachable: HTTPConnectionPool(host='localhost', port=8080): Max retries exceeded with url: /api/models (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022364A76190>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+## Ollama Discovery
+- Base: http://127.0.0.1:11434
+- Path matched: /v1/models (http 200)
+- Models: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Selected model: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
 
-## Recent Activity
-- Last Commit: 70586d09
-- Changes: 4 files modified
-- Test Status: pytest: FAIL
+## Backend Health
+- import gateway.app: OK (app loaded)
+- /healthz probe: OK (200 {"ok":true,"version":"1.0.0"})
+- uvicorn probe: OK
 
-## Configuration
-- Provider: Ollama
-- Base URL: http://127.0.0.1:11434/v1
-- API Key: ollama
-- Default Model: llama3:13b
+## Chat Probe
+- Using model: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]} -> FAIL
+```
+HTTP Error 400: Bad Request
+```

@@ -18,6 +18,17 @@ function App() {
       try {
         const models = await api.getModels()
         setModels(models)
+        // Preselect default model if present
+  const defaultModel = ((import.meta as any).env?.VITE_DEFAULT_MODEL as string) || 'llama3.2-vision:11b'
+        const found = models.find((m: any) => m.id === defaultModel)
+        if (found) {
+          // set in settings store
+          const { setSelectedModel } = useSettings.getState()
+          setSelectedModel(found.id)
+        } else if (models.length > 0) {
+          const { setSelectedModel } = useSettings.getState()
+          setSelectedModel(models[0].id)
+        }
       } catch (error) {
         console.error('Failed to load models:', error)
         setError('Failed to load models')

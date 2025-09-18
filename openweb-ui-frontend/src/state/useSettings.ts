@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { STORAGE_KEYS, storage } from '@/lib/storage'
+import { apiGet, apiPost } from '@/lib/api'
 
 interface Settings {
   baseUrl: string
@@ -22,8 +23,8 @@ interface SettingsState extends Settings {
 }
 
 const defaultSettings: Settings = {
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8088',
-  sseEnabled: true,
+  baseUrl: ((import.meta as any).env?.VITE_API_BASE_URL as string) || 'http://127.0.0.1:8090',
+  sseEnabled: false,
   selectedModel: 'llama3:13b',
   temperature: 0.7,
   memoryFirst: true,
@@ -32,29 +33,114 @@ const defaultSettings: Settings = {
 
 export const useSettings = create<SettingsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...defaultSettings,
-      setBaseUrl: (url) => set({ baseUrl: url }),
-      setSseEnabled: (enabled) => set({ sseEnabled: enabled }),
-      setSelectedModel: (model) => set({ selectedModel: model }),
-      setTemperature: (temp) => set({ temperature: temp }),
-      setMemoryFirst: (enabled) => set({ memoryFirst: enabled }),
-      setLlmPermission: (permission) => set({ llmPermission: permission }),
-      reset: () => set(defaultSettings),
+      _loadedFromServer: false,
+      setBaseUrl: (url) => {
+        set({ baseUrl: url })
+        try {
+          apiPost('/api/settings', { settings: { baseUrl: url } }).catch(() => {})
+        } catch (_) {}
+      },
+      setSseEnabled: (enabled) => {
+        set({ sseEnabled: enabled })
+        try {
+          apiPost('/api/settings', { settings: { sseEnabled: enabled } }).catch(() => {})
+        } catch (_) {}
+      },
+      setSelectedModel: (model) => {
+        set({ selectedModel: model })
+        try {
+          apiPost('/api/settings', { settings: { selectedModel: model } }).catch(() => {})
+        } catch (_) {}
+      },
+      setTemperature: (temp) => {
+        set({ temperature: temp })
+        try {
+          apiPost('/api/settings', { settings: { temperature: temp } }).catch(() => {})
+        } catch (_) {}
+      },
+      setMemoryFirst: (enabled) => {
+        set({ memoryFirst: enabled })
+        try {
+          apiPost('/api/settings', { settings: { memoryFirst: enabled } }).catch(() => {})
+        } catch (_) {}
+      },
+      setLlmPermission: (permission) => {
+        set({ llmPermission: permission })
+        try {
+          apiPost('/api/settings', { settings: { llmPermission: permission } }).catch(() => {})
+        } catch (_) {}
+      },
+      reset: () => {
+        set(defaultSettings)
+        try {
+          apiPost('/api/settings', { settings: defaultSettings }).catch(() => {})
+        } catch (_) {}
+      },
     }),
     {
       name: STORAGE_KEYS.SETTINGS,
-      storage: {
-        getItem: (name) => {
+      storage: ({
+        getItem: (name: string) => {
           const value = storage.get(name, null)
-          return value ? JSON.stringify(value) : null
+          try {
+            return value ? JSON.stringify(value) : null
+          } catch (err) {
+            console.warn('useSettings.getItem: failed to stringify stored value', err)
+            return null
+          }
         },
-        setItem: (name, value) => {
-          storage.set(name, JSON.parse(value))
+        setItem: (name: string, value: string) => {
+          try {
+            if (typeof value === 'string') {
+              const parsed = JSON.parse(value)
+              storage.set(name, parsed)
+            } else {
+              storage.set(name, value as any)
+            }
+          } catch (err) {
+            console.warn('useSettings.setItem: invalid JSON value, ignoring.', err)
+          }
         },
-        removeItem: (name) => {
+        removeItem: (name: string) => {
           storage.remove(name)
         },
+      } as any),
+      // Bootstrap: fetch server-side persisted settings (if available) and merge.
+      migrate: async (persistedState: any) => {
+        if (!persistedState) persistedState = {}
+        const defaultBase = defaultSettings.baseUrl
+        try {
+          try {
+            const resp = await apiGet('/api/settings')
+            if (resp && resp.settings) {
+              persistedState = { ...persistedState, ...resp.settings }
+            }
+          } catch (e) {
+            // ignore, keep persisted/local
+          }
+
+          const s = persistedState as any
+          if (!s.baseUrl || typeof s.baseUrl !== 'string') {
+            s.baseUrl = defaultBase
+          } else if (s.baseUrl.includes('8088')) {
+            s.baseUrl = defaultBase
+          }
+          return s
+        } catch (err) {
+          console.warn('useSettings.migrate: error validating persisted state, resetting to defaults', err)
+          return null
+        }
+      },
+      onRehydrateStorage: () => (state, error) => {
+        if (error) return
+        try {
+          // Push current settings to server (best-effort)
+          apiPost('/api/settings', { settings: (state as any) }).catch(() => {})
+        } catch (e) {
+          // noop
+        }
       },
     }
   )

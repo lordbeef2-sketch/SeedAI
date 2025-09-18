@@ -35,8 +35,27 @@ async function apiRequest<T>(
 export const api = {
   async getModels(): Promise<Model[]> {
     try {
-      const response = await apiRequest<{ data: Model[] }>('/api/models')
-      return response.data
+      const response = await apiRequest<any>('/api/models')
+      // Accept multiple shapes: { data: [...] } or { models: [...] } or an array
+      let list: any[] = []
+      if (response.data && Array.isArray(response.data)) list = response.data
+      else if (response.models && Array.isArray(response.models)) list = response.models
+      else if (Array.isArray(response)) list = response
+      // Normalize to Model[] with id field
+      const models: Model[] = list.map((m) => {
+        if (typeof m === 'string') {
+          // Try to extract id from python-style or json-style dict string
+          const pyIdMatch = m.match(/['\"]id['\"]\s*:\s*['\"]([^'\"]+)['\"]/)
+          const jsonIdMatch = m.match(/"id"\s*:\s*"([^"]+)"/)
+          const id = (pyIdMatch && pyIdMatch[1]) || (jsonIdMatch && jsonIdMatch[1]) || m
+          const pyOwned = m.match(/['\"]owned_by['\"]\s*:\s*['\"]([^'\"]+)['\"]/)
+          const owned_by = (pyOwned && pyOwned[1]) || 'library'
+          return { id, owned_by }
+        }
+        if (m && typeof m === 'object') return { id: m.id || m.name || String(m), owned_by: m.owned_by || m.owner || 'library' }
+        return { id: String(m), owned_by: 'unknown' }
+      })
+      return models
     } catch (error) {
       if (error instanceof ApiError) {
         throw error
@@ -47,7 +66,7 @@ export const api = {
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
     try {
-      return await apiRequest<ChatResponse>('/api/chat/completions', {
+      return await apiRequest<ChatResponse>('/api/chat', {
         method: 'POST',
         body: JSON.stringify(request),
       })
@@ -138,4 +157,13 @@ export const api = {
       throw new ApiError(0, 'Network error')
     }
   },
+}
+
+// Lightweight helpers for arbitrary GET/POST calls used by settings persistence
+export async function apiGet<T = any>(endpoint: string): Promise<T> {
+  return apiRequest<T>(endpoint, { method: 'GET' })
+}
+
+export async function apiPost<T = any>(endpoint: string, body: any): Promise<T> {
+  return apiRequest<T>(endpoint, { method: 'POST', body: JSON.stringify(body) })
 }

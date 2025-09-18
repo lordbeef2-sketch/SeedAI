@@ -38,6 +38,11 @@ except ImportError:
     from routes import models, chat
 app.include_router(models.router)
 app.include_router(chat.router)
+try:
+    from .routes import settings as settings_router
+except Exception:
+    from routes import settings as settings_router
+app.include_router(settings_router.router)
 
 # optional: only if you created the reporter and router files
 try:
@@ -54,12 +59,10 @@ def healthz():
 
 # Start progress reporter
 try:
-    import sys
-    sys.path.append('../..')
     from tools.progress_report import run_reporter
     threading.Thread(target=run_reporter, daemon=True).start()
 except Exception as e:
-    print(f"Failed to start progress reporter: {e}")
+    print("Failed to start progress reporter:", e)
 
 # non-blocking reporter run (optional; safe guard)
 try:

@@ -1,9 +1,8 @@
 @echo off
 git status
-wait -n
+sleep 10
 git add .
-wait -n
+sleep 15
 git commit -m "Update project files"
-wait -n
+sleep 10
 git push origin main
-wait -n

@@ -3,6 +3,7 @@ BASE_OLLAMA = "http://127.0.0.1:11434"
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from .diagnostics import router as diag_router
 import os
 import threading
 import sys
@@ -12,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 app = FastAPI(title="SeedAI Gateway", version="1.0.0")
+app.include_router(diag_router)
 
 # CORS for dev
 origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()]

@@ -1,16 +1,16 @@
 # Aurelia Progress Report
-Generated: 2025-09-19T09:16:39.650578 UTC
+Generated: 2025-09-19T20:48:25.530419 UTC
 
 ## System
-- Platform: Windows-10-10.0.26100-SP0
-- Python: 3.11.9 (C:\Users\Main1\AppData\Local\Programs\Python\Python311\python.exe)
+- Platform: Windows-11-10.0.26100-SP0
+- Python: 3.13.5 (C:\ProgramData\anaconda3\python.exe)
 - CPU count: 24
 - RAM: (install psutil for detailed RAM)
 - GPU VRAM: unknown
 
 ## Ollama Discovery
-- Base: http://127.0.0.1:11434
-- Path matched: /v1/models (http 200)
+- Base: http://127.0.0.1:11434/v1
+- Path matched: /models (http 200)
 - Models: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
 - Selected model: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
 
@@ -22,5 +22,5 @@ Generated: 2025-09-19T09:16:39.650578 UTC
 ## Chat Probe
 - Using model: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]} -> FAIL
 ```
-HTTP Error 400: Bad Request
+HTTP Error 404: Not Found
 ```

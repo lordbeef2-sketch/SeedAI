@@ -78,36 +78,6 @@ set "AURELIA_BOOTSTRAP_MAX=4000"
 set "DEV_AUTH=true"
 set "GATEWAY_API_KEY=ollama"
 
-REM ---- MEMORY SYNC (robust) ----
-set "SYNCPS=%TEMP%\seedai_sync_env_%RANDOM%.ps1"
->  "%SYNCPS%" echo $core = 'memory/core.json'
->> "%SYNCPS%" echo $dir  = Split-Path -Parent $core
->> "%SYNCPS%" echo if(-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir ^| Out-Null }
->> "%SYNCPS%" echo if(-not (Test-Path $core)) { '{}' ^| Set-Content -Encoding UTF8 $core }
->> "%SYNCPS%" echo $j = Get-Content $core -Raw ^| ConvertFrom-Json
->> "%SYNCPS%" echo if($null -eq $j) { $j = [pscustomobject]@{} }
-
-REM -- build a writable meta hashtable and assign back
->> "%SYNCPS%" echo $meta = @{}
->> "%SYNCPS%" echo if($j.PSObject.Properties.Name -contains 'meta'){
->> "%SYNCPS%" echo   if($j.meta -is [hashtable]) { $meta = $j.meta }
->> "%SYNCPS%" echo   elseif($j.meta -is [pscustomobject]) { $j.meta.PSObject.Properties ^| ForEach-Object { $meta[$_.Name] = $_.Value } }
->> "%SYNCPS%" echo }
->> "%SYNCPS%" echo $meta['last_boot'] = (Get-Date).ToString('o')
->> "%SYNCPS%" echo $j ^| Add-Member -NotePropertyName meta -NotePropertyValue $meta -Force
-
-REM -- ensure settings exists and set runtime
->> "%SYNCPS%" echo if(-not ($j.PSObject.Properties.Name -contains 'settings')) { $j ^| Add-Member -NotePropertyName settings -NotePropertyValue ([pscustomobject]@{}) -Force }
->> "%SYNCPS%" echo $set = $j.settings
->> "%SYNCPS%" echo if($set -isnot [hashtable]) { $h=@{}; $set.PSObject.Properties ^| ForEach-Object { $h[$_.Name]=$_.Value }; $set=$h }
->> "%SYNCPS%" echo $set.runtime = @{ backend='http://127.0.0.1:%BACKEND_PORT%'; frontend='http://127.0.0.1:5173'; ollama='%OLLAMA_BASE_URL%' }
->> "%SYNCPS%" echo $j.settings = $set
-
->> "%SYNCPS%" echo ($j ^| ConvertTo-Json -Depth 8) ^| Set-Content -Encoding UTF8 $core
-
-powershell -NoProfile -ExecutionPolicy Bypass -File "%SYNCPS%"
-del "%SYNCPS%" >NUL 2>&1
-
 REM ---- Start Ollama (ignore AutoRun with /d) ----
 echo [Ollama] starting -> %LOG_OLLAMA%
 start "ollama" /min cmd /d /c "ollama serve >> "%LOG_OLLAMA%" 2>&1"

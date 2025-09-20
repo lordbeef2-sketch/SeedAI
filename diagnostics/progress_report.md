@@ -1,5 +1,5 @@
 # Aurelia Progress Report
-Generated: 2025-09-20T00:22:08.138551 UTC
+Generated: 2025-09-20T17:03:00.968042 UTC
 
 ## System
 - Platform: Windows-10-10.0.26100-SP0
@@ -11,8 +11,8 @@ Generated: 2025-09-20T00:22:08.138551 UTC
 ## Ollama Discovery
 - Base: http://127.0.0.1:11434
 - Path matched: /v1/models (http 200)
-- Models: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
-- Selected model: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Models: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Selected model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
 
 ## Backend Health
 - import gateway.app: OK (app loaded)
@@ -20,7 +20,7 @@ Generated: 2025-09-20T00:22:08.138551 UTC
 - uvicorn probe: OK
 
 ## Chat Probe
-- Using model: {"object":"list","data":[{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]} -> FAIL
+- Using model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]} -> FAIL
 ```
 HTTP Error 400: Bad Request
 ```

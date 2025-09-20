@@ -6,7 +6,6 @@ import json, os
 router = APIRouter(prefix="/diag", tags=["diagnostics"])
 
 def _core_path() -> Path:
-    # repo root is parent of the 'gateway' folder
     root = Path(__file__).resolve().parents[1]
     memdir = root / "memory"
     memdir.mkdir(parents=True, exist_ok=True)
@@ -18,9 +17,7 @@ def _load_core() -> dict:
         try:
             return json.loads(p.read_text(encoding="utf-8"))
         except Exception:
-            # fall through to fresh structure if file is corrupted
             pass
-    # minimal seed structure (matches what our starter writes)
     return {
         "meta": {
             "version": "1.0",
@@ -57,24 +54,13 @@ def health():
 def test_write(note: str | None = None):
     core_path = _core_path()
     data = _load_core()
-
-    # ensure events list exists
     data.setdefault("memory", {}).setdefault("events", [])
-
     evt = {
         "type": "test-write",
         "ts": datetime.utcnow().isoformat() + "Z",
         "note": note or "hello from /diag/memory/test-write",
     }
     data["memory"]["events"].append(evt)
-    # bump last_boot for visibility
     data.setdefault("meta", {})["last_boot"] = datetime.utcnow().isoformat() + "Z"
-
     _atomic_write(core_path, data)
-
-    return {
-        "ok": True,
-        "wrote": evt,
-        "core_json": str(core_path),
-        "events_count": len(data["memory"]["events"]),
-    }
+    return {"ok": True, "wrote": evt, "core_json": str(core_path), "events_count": len(data["memory"]["events"])}

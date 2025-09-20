@@ -1,31 +1,49 @@
-# gateway/openwebui_models_probe.py
-from fastapi import APIRouter
-import urllib.request, json
+from fastapi import APIRouter, HTTPException
+import os, json, time
 
-router = APIRouter()
-OLLAMA_BASE = "http://127.0.0.1:11434"
+router = APIRouter(prefix="/api", tags=["openwebui-compat"])
 
-@router.get("/api/models")
-def models_probe():
-    candidates = ("/v1/models", "/models", "/api/tags", "/v1/tags")
-    last_err = None
-    for p in candidates:
-        url = OLLAMA_BASE.rstrip("/") + p
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent":"AureliaProbe/1.0"})
-            with urllib.request.urlopen(req, timeout=4) as resp:
-                raw = resp.read().decode("utf-8", errors="ignore")
-                try:
-                    data = json.loads(raw)
-                    if isinstance(data, dict) and "models" in data:
-                        names = [m.get("name") if isinstance(m, dict) else str(m) for m in data["models"]]
-                    elif isinstance(data, list):
-                        names = [ (item.get("name") if isinstance(item, dict) else str(item)) for item in data ]
-                    else:
-                        names = [w for w in raw.split() if any(t in w.lower() for t in ("llama","gemma","mistral","qwen"))]
-                    return {"ok": True, "endpoint": p, "models": names}
-                except Exception:
-                    return {"ok": True, "endpoint": p, "raw": raw[:2000]}
-        except Exception as e:
-            last_err = str(e)
-    return {"ok": False, "error": "no ollama endpoint reachable", "last": last_err}
+def _ollama_base():
+    base = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    if base.lower().endswith("/v1"):
+        base = base[:-3]
+    return base
+
+def _get(url: str, timeout: float = 5.0):
+    try:
+        import httpx
+        r = httpx.get(url, timeout=timeout)
+        r.raise_for_status()
+        return r.json()
+    except Exception:
+        pass
+    try:
+        import requests
+        r = requests.get(url, timeout=timeout)
+        r.raise_for_status()
+        return r.json()
+    except Exception:
+        pass
+    from urllib.request import urlopen
+    with urlopen(url, timeout=timeout) as f:
+        return json.loads(f.read().decode("utf-8"))
+
+@router.get("/models")
+def list_models():
+    base = _ollama_base()
+    url = f"{base}/api/tags"
+    try:
+        data = _get(url, timeout=5.0)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Model probe failed: {e}")
+
+    models = []
+    for m in data.get("models", []):
+        mid = m.get("name") or m.get("model") or "unknown"
+        models.append({
+            "id": mid,
+            "object": "model",
+            "created": int(time.time()),
+            "owned_by": "ollama",
+        })
+    return {"object": "list", "data": models}

@@ -61,7 +61,6 @@ function Touch-CoreJson {
 }
 
 function Load-ProviderDefaults {
-  # Defaults align with README
   $env:OLLAMA_BASE_URL = $env:OLLAMA_BASE_URL   ? $env:OLLAMA_BASE_URL   : "http://127.0.0.1:11434"
   $env:AURELIA_DEFAULT_MODEL = $env:AURELIA_DEFAULT_MODEL ? $env:AURELIA_DEFAULT_MODEL : "llama3.2-vision:11b"
   if (Test-Path $Provider) {
@@ -116,10 +115,8 @@ function Start-Frontend {
   Assert-Npm
   if (-not (Test-Path $FrontendDir)) { throw "Frontend folder not found: $FrontendDir" }
 
-  # Match run_all wiring:
   $env:VITE_API_URL = "http://localhost:8090/api"
 
-  # Install deps if needed
   $nodeModules = Join-Path $FrontendDir "node_modules"
   $hasLock     = Test-Path (Join-Path $FrontendDir "package-lock.json")
   if (-not (Test-Path $nodeModules)) {
@@ -137,6 +134,7 @@ function Start-Frontend {
 }
 
 function Start-ProgressReporter {
+  param()
   if ($NoReporter) { return }
   if (Test-Path $ReporterPy) {
     try {
@@ -165,36 +163,14 @@ function Print-Pointers {
   Write-Host " PYTHONPATH:            $($env:PYTHONPATH)"
   Write-Host "========================================" -ForegroundColor Cyan
 }
-function Write-ReadyBanner {
-  param([string]$Msg = "A U R E L I A   O N L I N E")
-  Write-Host ""
-  Write-Host "========================================" -ForegroundColor Magenta
-  Write-Host "  $Msg" -ForegroundColor Green
-  Write-Host "  GUI → http://localhost:5173" -ForegroundColor Cyan
-  Write-Host "  API → http://localhost:8090/docs" -ForegroundColor Cyan
-  Write-Host "========================================" -ForegroundColor Magenta
-  try { [console]::Beep(880,150); [console]::Beep(988,150); [console]::Beep(1046,200) } catch {}
-}
 
-function Quick-Health {
-  $ok = $false
-  try {
-    $r = Invoke-WebRequest -Uri "http://127.0.0.1:8090/diag/health" -TimeoutSec 3 -Method GET
-    if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 300) { $ok = $true }
-  } catch {}
-  if ($ok) { Write-Host "Health: OK" -ForegroundColor Green }
-  else     { Write-Host "Health: not responding (yet)" -ForegroundColor Yellow }
-  return $ok
-}
-
-# ----- Run ---------------------------------------------------------------
 Ensure-Dir $MemoryDir
 Ensure-Dir $LogsDir
 Backup-OldMemory
 New-CoreJson
 Touch-CoreJson
 
-Load-ProviderDefaults   # ← pulls base_url/model from provider.json when present (README mentions both)  # cites defaults
+Load-ProviderDefaults
 Start-Ollama
 Start-Backend
 Start-Frontend

@@ -1,8 +1,8 @@
 @echo off
 git status
-sleep 10
+timeout /t 10 /nobreak >nul
 git add .
-sleep 15
+timeout /t 15 /nobreak >nul
 git commit -m "Update project files"
-sleep 10
+timeout /t 10 /nobreak >nul
 git push origin main

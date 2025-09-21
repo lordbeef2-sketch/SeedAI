@@ -15,6 +15,38 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 app = FastAPI(title="SeedAI Gateway", version="1.0.0")
 app.include_router(diag_router)
 
+# Initialize seedai_storage DB on startup and close on shutdown
+try:
+    from gateway import seedai_storage
+except Exception:
+    seedai_storage = None
+
+
+@app.on_event("startup")
+def _startup_db():
+    if seedai_storage:
+        try:
+            seedai_storage.init_db()
+            # optional auto-migration controlled by env var
+            if os.environ.get("MIGRATE_LEGACY_MEMORY", "false").lower() in ("1", "true", "yes"):
+                legacy = os.environ.get("LEGACY_MEMORY_PATH", str(os.path.join(os.path.dirname(os.path.dirname(__file__)), "memory")))
+                try:
+                    res = seedai_storage.migrate_from_json(legacy)
+                    print("[seedai_storage] migration result:", res)
+                except Exception as e:
+                    print("[seedai_storage] migration failed:", e)
+        except Exception as e:
+            print("[seedai_storage] init_db failed:", e)
+
+
+@app.on_event("shutdown")
+def _shutdown_db():
+    if seedai_storage:
+        try:
+            seedai_storage.close_db()
+        except Exception:
+            pass
+
 # CORS for dev
 origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
 app.add_middleware(

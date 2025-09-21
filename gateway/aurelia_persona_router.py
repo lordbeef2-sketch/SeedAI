@@ -1,25 +1,21 @@
 from fastapi import APIRouter, HTTPException, Request
 import os, json, pathlib, urllib.request, re, time
 
-# core memory handler
+# Use the seedai_storage APIs for memory and conversation persistence
 try:
-    from gateway.core_memory_handler import (
-        extract_core_json,
-        strip_core_blocks,
-        append_memory_file,
-        persist_conversation,
+    from gateway.seedai_storage import (
+        process_model_output,
+        save_memory_entry,
+        append_message,
     )
 except Exception:
-    def extract_core_json(text):
-        return None
-    def strip_core_blocks(text):
-        return text
-    def append_memory_file(entry, source="aurelia"):
+    process_model_output = None
+    def save_memory_entry(entry, source='aurelia', verbatim=False):
         return entry
-    def persist_conversation(conversation_id, conversation_obj):
-        return conversation_obj
+    def append_message(conversation_id, role, text):
+        return None
 
-# memory store
+# memory store compatibility shim (uses gateway.memory_store which delegates to seedai_storage)
 try:
     from gateway.memory_store import load_core, save_core
 except Exception:
@@ -27,6 +23,15 @@ except Exception:
         return {}
     def save_core(d):
         return d
+
+# conversation persistence helper (compat shim)
+try:
+    from gateway.core_memory_handler import persist_conversation, strip_core_blocks as _strip_core_blocks
+except Exception:
+    def persist_conversation(conversation_id, conversation_obj):
+        return conversation_obj
+    def _strip_core_blocks(text):
+        return text
 
 # Import bootstrap loader
 try:
@@ -64,7 +69,12 @@ def _post_json(url: str, payload: dict, timeout: int = 60) -> dict:
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8", errors="ignore"))
+        text = r.read().decode("utf-8", errors="ignore")
+        try:
+            return json.loads(text)
+        except Exception:
+            print("[Aurelia][_post_json] non-json response")
+            return {"text": text}
 
 @router.post("/api/chat")
 async def chat_with_persona(req: Request):
@@ -76,6 +86,8 @@ async def chat_with_persona(req: Request):
         data = await req.json()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON body")
+
+    print(f"[Aurelia][chat] incoming request keys: {list(data.keys())}")
 
     model = data.get("model") or DEFAULT_MODEL
     messages = data.get("messages") or []
@@ -98,6 +110,7 @@ async def chat_with_persona(req: Request):
             merged.append(bm)
 
     messages = merged + messages
+    print(f"[Aurelia][chat] merged messages count={len(messages)}; first_system={(messages[0]['content'][:60] + '...') if messages else ''}")
 
     payload = {
         "model": model,
@@ -125,7 +138,9 @@ async def chat_with_persona(req: Request):
 
     try:
         url = OLLAMA_BASE.rstrip("/") + "/v1/chat/completions"
+        print(f"[Aurelia][chat] forwarding to Ollama {url} with model={payload.get('model')}")
         out = _post_json(url, payload)
+        print(f"[Aurelia][chat] received response type={type(out)}")
 
         # Extract assistant content
         assistant_text = ""
@@ -143,18 +158,33 @@ async def chat_with_persona(req: Request):
             assistant_text = str(out)
 
         # Detect CORE_MEMORY_UPDATE JSON block and persist to core memory (server-only log)
-        core_json = extract_core_json(assistant_text)
-        if core_json:
-            try:
-                append_memory_file(core_json, source="aurelia")
-                # annotate server meta
-                if isinstance(out, dict):
-                    out.setdefault("_server", {})["_memory_saved"] = {"keys": list(core_json.keys())}
-            except Exception:
-                pass
+        try:
+            if process_model_output:
+                print(f"[Aurelia][chat] calling process_model_output for conv={conv_id}")
+                sanitized, parsed = process_model_output(conv_id, assistant_text, source="aurelia")
+                print(f"[Aurelia][chat] process_model_output parsed={bool(parsed)}")
+                # process_model_output already appended assistant message and saved memory
+                if parsed and isinstance(out, dict):
+                    out.setdefault("_server", {})["_memory_saved"] = {"keys": list(parsed.keys())}
+            else:
+                # fallback: try to parse core JSON and save
+                from gateway.core_memory_handler import extract_core_json as _ext, append_memory_file as _app
+                parsed = _ext(assistant_text)
+                if parsed:
+                    _app(parsed, source="aurelia")
+                    if isinstance(out, dict):
+                        out.setdefault("_server", {})["_memory_saved"] = {"keys": list(parsed.keys())}
+                sanitized = assistant_text
+                print("[Aurelia][chat] fallback parsed and saved")
+        except Exception:
+            sanitized = assistant_text
 
         # Strip the CORE_MEMORY_UPDATE block from the assistant-visible text
-        sanitized = strip_core_blocks(assistant_text)
+        try:
+            sanitized = _strip_core_blocks(assistant_text)
+        except Exception:
+            sanitized = assistant_text
+        print(f"[Aurelia][chat] sanitized assistant text preview: {sanitized[:120].replace('\n',' ')}")
         # If sanitized differs, replace the assistant message content in the returned payload
         try:
             if isinstance(out, dict) and 'choices' in out and isinstance(out['choices'], list) and len(out['choices']):
@@ -174,14 +204,23 @@ async def chat_with_persona(req: Request):
         except Exception:
             pass
 
-        # Persist assistant message to conversation store
+        # If process_model_output handled appending assistant message, we're done.
+        # Otherwise, persist assistant message to conversation store.
         try:
-            if conv_id:
+            if not process_model_output and conv_id:
                 assistant_msg = {'role': 'assistant', 'content': sanitized, 'timestamp': int(time.time())}
-                persist_conversation(conv_id, {'messages': [assistant_msg]})
-                # ensure client knows the conversation id and memory save meta
-                if isinstance(out, dict):
-                    out.setdefault('_server', {})['conversation_id'] = conv_id
+                try:
+                    from gateway.core_memory_handler import persist_conversation as _persist
+
+                    _persist(conv_id, {'messages': [assistant_msg]})
+                    print(f"[Aurelia][chat] persisted assistant message to conv {conv_id} via core_memory_handler")
+                except Exception:
+                    append_message(conv_id, 'assistant', sanitized)
+                    print(f"[Aurelia][chat] appended assistant message to conv {conv_id} via seedai_storage.append_message")
+
+            # ensure client knows the conversation id and memory save meta
+            if isinstance(out, dict):
+                out.setdefault('_server', {})['conversation_id'] = conv_id
         except Exception:
             pass
 

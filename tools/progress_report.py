@@ -242,5 +242,13 @@ def main():
     print(f"Wrote {OUT_MD}")
     print(f"Updated {DIGEST_MD}")
 
+
+def run_reporter():
+    """Compatibility wrapper for older callers that expect `run_reporter`.
+
+    Starts the reporter once (same behavior as running the module directly).
+    """
+    return main()
+
 if __name__ == "__main__":
     main()

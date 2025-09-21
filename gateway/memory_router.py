@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException
-from gateway.memory_store import load_core, save_core
+from gateway.seedai_storage import load_core, save_core, list_conversations, load_conversation, get_memory_summary
 
 router = APIRouter()
 
@@ -24,17 +24,22 @@ async def post_memory(req: Request):
 @router.get("/api/conversations")
 async def get_conversations():
     try:
-        from gateway.core_memory_handler import load_all_conversations
-        return load_all_conversations()
+        return list_conversations()
     except Exception:
-        return {}
+        return []
 
 
 @router.get("/api/conversations/{conversation_id}")
 async def get_conversation(conversation_id: str):
     try:
-        from gateway.core_memory_handler import load_all_conversations
-        allc = load_all_conversations()
-        return allc.get(conversation_id, {})
+        return load_conversation(conversation_id)
     except Exception:
         return {}
+
+
+@router.get("/api/memory/summary")
+async def memory_summary(limit: int = 5):
+    try:
+        return get_memory_summary(limit=limit)
+    except Exception:
+        return {"total": 0, "recent": [], "topic_counts": {}}

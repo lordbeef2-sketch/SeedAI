@@ -25,11 +25,8 @@ set "ROOT=%~dp0"
 cd /d "%ROOT%"
 if not exist logs mkdir logs
 
-REM ---- Timestamp (YYYYMMDD-HHMMSS) ----
-for /f "tokens=1-3 delims=/ " %%a in ("%date%") do set "Y=%%c" & set "M=%%a" & set "D=%%b"
-for /f "tokens=1-4 delims=:." %%h in ("%time%") do set "HH=%%h" & set "MM=%%i" & set "SS=%%j"
-set "HH=0%HH%" & set "HH=%HH:~-2%"
-set "TS=%Y%%M%%D%-%HH%%MM%%SS%"
+REM ---- Timestamp (YYYYMMDD-HHMMSS) (PowerShell ensures locale-independent format) ----
+for /f "delims=" %%i in ('powershell -NoProfile -Command "(Get-Date).ToString('yyyyMMdd-HHmmss')"') do set "TS=%%i"
 
 set "LOG_OLLAMA=logs\ollama-%TS%.log"
 set "LOG_BACKEND=logs\backend-%TS%.log"
@@ -80,7 +77,7 @@ set "GATEWAY_API_KEY=ollama"
 
 REM ---- MEMORY SYNC (robust) ----
 set "SYNCPS=%TEMP%\seedai_sync_env_%RANDOM%.ps1"
->  "%SYNCPS%" echo $core = 'memory/core.json'
+>  "%SYNCPS%" echo $core = 'seedai\\memory\\core.json'
 >> "%SYNCPS%" echo $dir  = Split-Path -Parent $core
 >> "%SYNCPS%" echo if(-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir ^| Out-Null }
 >> "%SYNCPS%" echo if(-not (Test-Path $core)) { '{}' ^| Set-Content -Encoding UTF8 $core }

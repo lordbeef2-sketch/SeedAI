@@ -124,8 +124,18 @@ export const useSettings = create<SettingsState>()(
           const s = persistedState as any
           if (!s.baseUrl || typeof s.baseUrl !== 'string') {
             s.baseUrl = defaultBase
-          } else if (s.baseUrl.includes('8088')) {
-            s.baseUrl = defaultBase
+          } else {
+            // Normalize baseUrl: if user previously set a value ending with '/api' (old VITE_API_URL
+            // behavior), strip the trailing '/api' so endpoints like '/api/models' don't become
+            // '/api/api/models'. Also guard against dev port misconfigs (e.g., 8088).
+            try {
+              s.baseUrl = String(s.baseUrl).replace(/\/api\/?$/i, '')
+            } catch (_) {
+              s.baseUrl = defaultBase
+            }
+            if (s.baseUrl.includes('8088')) {
+              s.baseUrl = defaultBase
+            }
           }
           return s
         } catch (err) {

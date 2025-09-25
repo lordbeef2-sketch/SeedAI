@@ -58,7 +58,9 @@ def _load_persona() -> str:
             pass
     return "You are Aurelia, the SeedAI assistant. Be warm, concise, and helpful."
 
-PERSONA_TEXT = _load_persona()
+# Load persona text at import-time is fragile if the file is edited while the
+# server is running. We will call `_load_persona()` per-request so changes are
+# picked up immediately without restarting the backend.
 
 def _post_json(url: str, payload: dict, timeout: int = 60) -> dict:
     body = json.dumps(payload).encode("utf-8")
@@ -100,13 +102,15 @@ async def chat_with_persona(req: Request):
         bootstrap = []
 
     # Ensure persona is first: replace or insert persona text as first system message
-    persona_msg = {"role": "system", "content": PERSONA_TEXT}
+    # Load persona file on each request so edits take effect immediately.
+    persona_msg = {"role": "system", "content": _load_persona()}
 
     # Merge: persona first, then any bootstrap messages that aren't identical
     merged = [persona_msg]
+    persona_text = _load_persona()
     for bm in bootstrap:
-        # avoid duplicates
-        if bm.get("content") and bm.get("content") != PERSONA_TEXT:
+        # avoid duplicates with the current persona text
+        if bm.get("content") and bm.get("content") != persona_text:
             merged.append(bm)
 
     messages = merged + messages
@@ -184,7 +188,9 @@ async def chat_with_persona(req: Request):
             sanitized = _strip_core_blocks(assistant_text)
         except Exception:
             sanitized = assistant_text
-        print(f"[Aurelia][chat] sanitized assistant text preview: {sanitized[:120].replace('\n',' ')}")
+        # avoid embedding backslash-escaped sequences directly inside f-strings
+        preview = sanitized[:120].replace('\n', ' ')
+        print(f"[Aurelia][chat] sanitized assistant text preview: {preview}")
         # If sanitized differs, replace the assistant message content in the returned payload
         try:
             if isinstance(out, dict) and 'choices' in out and isinstance(out['choices'], list) and len(out['choices']):

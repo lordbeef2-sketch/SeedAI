@@ -19,6 +19,26 @@ const SettingsPage = () => {
     }
   }
 
+  const [personaText, setPersonaText] = React.useState('')
+
+  const savePersona = async () => {
+    try {
+      const base = (window as any).__SEEDAI_BASE_URL__ || ''
+      const res = await fetch(`${base}/api/persona/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ persona: personaText }),
+      })
+      const j = await res.json()
+      console.debug('persona save response', j)
+      if (!res.ok) alert('Failed to save persona: ' + (j.detail || res.status))
+      else alert('Persona saved — bytes: ' + j.bytes)
+    } catch (err) {
+      console.error(err)
+      alert('Error saving persona — see console')
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -78,9 +98,26 @@ const SettingsPage = () => {
 
           {/* Actions */}
           <div className="pt-6 border-t">
-            <Button variant="outline" onClick={handleReset}>
-              Reset to Defaults
-            </Button>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" onClick={handleReset}>
+                  Reset to Defaults
+                </Button>
+              </div>
+
+              <div className="pt-4">
+                <label className="text-sm font-medium">Persona (debug)</label>
+                <textarea
+                  className="w-full h-40 p-2 border rounded"
+                  value={personaText}
+                  onChange={(e) => setPersonaText(e.target.value)}
+                  placeholder="Paste persona markdown here"
+                />
+                <div className="pt-2">
+                  <Button onClick={savePersona}>Save Persona (debug)</Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

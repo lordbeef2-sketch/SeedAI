@@ -16,7 +16,7 @@ Apply:
 2) Open gateway/app.py and paste blocks from gateway/app.patch.txt in the indicated places.
 3) Start Ollama:   ollama serve    (ensure llama3.2-vision:11b is listed: `ollama list`)
 4) Run backend:    $env:PYTHONPATH="." ; uvicorn gateway.app:app --host 0.0.0.0 --port 8090
-5) Verify:         http://127.0.0.1:8090/api/models  -> lists llama3.2-vision:11b
+5) Verify:         http://127.0.0.1:8090/v1/models  -> lists llama3.2-vision:11b
 6) Reporter:       python -m tools.progress_report
 7) Check outputs:  diagnostics/progress_report.md  +  ElysiaDigest/latest/digest.md
 

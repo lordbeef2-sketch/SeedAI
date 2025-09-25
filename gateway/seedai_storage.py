@@ -21,6 +21,7 @@ import time
 import pathlib
 import re
 from typing import Optional, Dict, Any, List
+from memory_manager import MemoryManager
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEFAULT_DB_DIR = ROOT / "seedai" / "memory"
@@ -31,6 +32,8 @@ CORE_RE = re.compile(r"CORE_MEMORY_UPDATE\s*(\{.*?\})\s*END_CORE_MEMORY_UPDATE",
 
 # module-level connection (opened by init_db)
 _conn: Optional[sqlite3.Connection] = None
+# MemoryManager instance (optional)
+_mm: Optional[MemoryManager] = None
 
 
 def _now_ts() -> str:
@@ -59,9 +62,17 @@ def init_db(db_path: Optional[str] = None):
     else:
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    _conn = sqlite3.connect(str(DB_PATH), check_same_thread=False, timeout=30)
-    _conn.execute("PRAGMA journal_mode=WAL")
-    _conn.execute("PRAGMA foreign_keys=ON")
+    global _mm, _conn
+    # prefer MemoryManager-backed connection so we share the same DB and
+    # benefit from its performance pragmas and schema management
+    try:
+        _mm = MemoryManager(db_path=str(DB_PATH))
+        _conn = _mm._conn
+    except Exception:
+        # fallback to direct sqlite connection
+        _conn = sqlite3.connect(str(DB_PATH), check_same_thread=False, timeout=30)
+        _conn.execute("PRAGMA journal_mode=WAL")
+        _conn.execute("PRAGMA foreign_keys=ON")
     c = _conn.cursor()
 
     # memories: store different memory types; keep a canonical core memory with
@@ -134,6 +145,15 @@ def init_db(db_path: Optional[str] = None):
 
 def close_db():
     global _conn
+    global _conn, _mm
+    if _mm:
+        try:
+            _mm.close()
+        except Exception:
+            pass
+        _mm = None
+        _conn = None
+        return
     if _conn:
         try:
             _conn.commit()

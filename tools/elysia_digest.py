@@ -131,7 +131,7 @@ Generated: {datetime.datetime.now().isoformat()}
 
 ## Configuration
 - Provider: Ollama
-- Base URL: http://127.0.0.1:11434/v1
+- Base URL: http://127.0.0.1:11434
 - API Key: ollama
 - Default Model: llama3:13b
 """

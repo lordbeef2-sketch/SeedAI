@@ -19378,4 +19378,195 @@ pytest: FAIL
 - RAM usage: 27 GB / 95 GB
 - CPU usage: 9.8%
 - Status: ❌ Backend not reachable: HTTPConnectionPool(host='localhost', port=8080): Max retries exceeded with url: /api/models (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001670FEB1210>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
-- Health probe: PASS (assuming backend running)
+- Health probe: PASS (assuming backend running)## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:28:09.809919 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:28:09.811981 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:28:09.817141 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:28:09.819752 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:28:09.897828 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:28:13.630068 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:28:13.643905 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:30:41.027995 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:30:41.101513 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:30:41.232609 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-21T22:30:41.234597 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T01:41:04.203662 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T01:41:04.236296 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T01:41:04.285048 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T01:41:04.311750 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T01:41:06.118729 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T01:41:06.134088 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:36:38.463779 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:36:38.885038 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:36:40.438016 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:36:43.790393 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:36:45.209338 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:44:58.706337 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:44:58.707546 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:44:58.877802 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:44:58.879918 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:45:00.592319 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T03:45:00.699496 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: none
+- Generated: 2025-09-22T17:05:29.567615 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: none
+- Generated: 2025-09-22T17:05:33.960969 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: none
+- Generated: 2025-09-22T17:11:37.791686 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: none
+- Generated: 2025-09-22T17:11:42.796942 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T17:25:33.626542 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T17:25:33.750970 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T17:25:37.318708 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T17:25:37.361973 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: none
+- Generated: 2025-09-22T17:34:10.624285 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: none
+- Generated: 2025-09-22T17:34:15.630145 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: none
+- Generated: 2025-09-22T17:51:10.232287 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: none
+- Generated: 2025-09-22T17:51:10.233312 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T17:52:42.600805 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T17:52:42.714159 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T17:59:52.581459 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T17:59:52.675362 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T18:37:03.574749 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T18:37:03.683728 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T18:37:08.450707 UTC
+## Runtime Check
+- Default provider: Ollama (http://127.0.0.1:11434)
+- Default model: {"object":"list","data":[{"id":"deepseek-coder-v2:lite","object":"model","created":1758365380,"owned_by":"library"},{"id":"llama3.2-vision:11b","object":"model","created":1757973005,"owned_by":"library"},{"id":"gemma3:12b","object":"model","created":1757179259,"owned_by":"library"}]}
+- Generated: 2025-09-22T18:37:13.383709 UTC
